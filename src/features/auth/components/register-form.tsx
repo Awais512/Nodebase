@@ -56,7 +56,7 @@ export const RegisterForm = () => {
         name: values.email,
         email: values.email,
         password: values.password,
-        callbackURL: "/",
+        // callbackURL: "/",
       },
       {
         onSuccess: () => {
@@ -89,6 +89,12 @@ export const RegisterForm = () => {
                     type="button"
                     disabled={isPending}
                   >
+                    <Image
+                      src="/logos/github.svg"
+                      alt="Github"
+                      height={20}
+                      width={20}
+                    />
                     Continue with Github
                   </Button>
                   <Button
@@ -97,6 +103,12 @@ export const RegisterForm = () => {
                     type="button"
                     disabled={isPending}
                   >
+                    <Image
+                      src="/logos/google.svg"
+                      alt="Google"
+                      height={20}
+                      width={20}
+                    />
                     Continue with Google
                   </Button>
                 </div>
