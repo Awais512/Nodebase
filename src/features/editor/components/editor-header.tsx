@@ -13,11 +13,15 @@ import { SaveIcon } from "lucide-react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { useEffect, useRef, useState } from "react";
-import { useSuspenseWorkflow, useUpdateWorkflowName } from "@/features/workflows/hooks/use-workflows";
-
+import {
+  useSuspenseWorkflow,
+  useUpdateWorkflow,
+  useUpdateWorkflowName,
+} from "@/features/workflows/hooks/use-workflows";
+import { useAtomValue } from "jotai";
+import { editorAtom } from "../store/atom";
 
 export const EditorNameInput = ({ workflowId }: { workflowId: string }) => {
-
   const { data: workflow } = useSuspenseWorkflow(workflowId);
   const updateWorkflowName = useUpdateWorkflowName();
 
@@ -39,22 +43,20 @@ export const EditorNameInput = ({ workflowId }: { workflowId: string }) => {
     }
   }, [isEditing]);
 
-  const handleSave = async() => {
-    if(name===workflow.name){
+  const handleSave = async () => {
+    if (name === workflow.name) {
       setIsEditing(false);
       return;
     }
-    
+
     try {
       await updateWorkflowName.mutateAsync({ id: workflowId, name });
-      
     } catch (error) {
       console.error("Failed to update workflow name:", error);
     } finally {
       setIsEditing(false);
     }
   };
-
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -64,7 +66,7 @@ export const EditorNameInput = ({ workflowId }: { workflowId: string }) => {
     }
   };
 
-  if(isEditing){
+  if (isEditing) {
     return (
       <Input
         disabled={updateWorkflowName.isPending}
@@ -79,13 +81,16 @@ export const EditorNameInput = ({ workflowId }: { workflowId: string }) => {
   }
 
   return (
-   <BreadcrumbItem onClick={() => setIsEditing(true)} className="cursor-pointer hover:text-foreground transition-colors">
-    {isEditing ? (
-      <Input value={name} onChange={(e) => setName(e.target.value)} />
-    ) : (
-      workflow.name
-    )}
-   </BreadcrumbItem>
+    <BreadcrumbItem
+      onClick={() => setIsEditing(true)}
+      className="cursor-pointer hover:text-foreground transition-colors"
+    >
+      {isEditing ? (
+        <Input value={name} onChange={(e) => setName(e.target.value)} />
+      ) : (
+        workflow.name
+      )}
+    </BreadcrumbItem>
   );
 };
 
@@ -97,7 +102,7 @@ export const EditorBreadcrumbs = ({ workflowId }: { workflowId: string }) => {
           <BreadcrumbLink asChild>
             <Link prefetch href="/workflows">
               Workflows
-            </Link> 
+            </Link>
           </BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
@@ -108,9 +113,25 @@ export const EditorBreadcrumbs = ({ workflowId }: { workflowId: string }) => {
 };
 
 export const EditorSavebutton = ({ workflowId }: { workflowId: string }) => {
+  const editor = useAtomValue(editorAtom);
+  const saveWorkflow = useUpdateWorkflow();
+
+  const handleSave = () => {
+    if (!editor) return;
+
+    const nodes = editor.getNodes();
+    const edges = editor.getEdges();
+
+    saveWorkflow.mutate({
+      id: workflowId,
+      nodes,
+      edges,
+    });
+  };
+
   return (
     <div className="ml-auto">
-      <Button size="sm" onClick={() => {}} disabled={false}>
+      <Button size="sm" onClick={handleSave} disabled={saveWorkflow.isPending}>
         <SaveIcon className="size-4" />
         Save
       </Button>
