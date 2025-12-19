@@ -3,9 +3,11 @@ import ky, { type Options as KyOptions } from "ky";
 import { NonRetriableError } from "inngest";
 import Handlebars from "handlebars";
 
-Handlebars.registerHelper("json", (context) =>
-  JSON.stringify(context, null, 2)
-);
+Handlebars.registerHelper("json", (context) => {
+  const jsonStringify = JSON.stringify(context, null, 2);
+  const safeString = new Handlebars.SafeString(jsonStringify);
+  return safeString;
+});
 
 type HttpRequestData = {
   variableName: string;
@@ -38,7 +40,9 @@ export const httpRequestExecutor: NodeExecutor<HttpRequestData> = async ({
 
     const options: KyOptions = { method };
 
-    if (["POST", "PUT", "PATCH", "GET", "DELETE"].includes(method)) {
+    const methodsWithBody = ["POST", "PUT", "PATCH"];
+
+    if (methodsWithBody.includes(method) && data.body?.trim()) {
       const resolved = Handlebars.compile(data.body)(context);
       JSON.parse(resolved);
 
